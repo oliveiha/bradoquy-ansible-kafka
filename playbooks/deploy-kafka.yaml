@@ -1,0 +1,16 @@
+---
+- name: install zookeeper
+  hosts: zookeeper
+  gather_facts: true
+  user: root
+  become: true
+  roles:
+    - role: ansible-role-zookeeper
+
+- name: install kafka broker
+  gather_facts: true
+  hosts: kafka_broker
+  user: root
+  become: true
+  roles:
+    - role: ansible-role-kafka
