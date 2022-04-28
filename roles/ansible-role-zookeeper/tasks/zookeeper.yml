@@ -1,0 +1,56 @@
+---
+
+- name: Downloading zookeeper tar to server
+  unarchive:
+    src: "{{ _zookeeper_link }}"
+    dest: "/opt/"
+    owner: "{{ zookeeper.user }}"
+    group: "{{ zookeeper.group }}"
+    remote_src: true
+
+- name: Creating link simbolic to path {{ path_zoo }}
+  file:
+    src: "/opt/apache-zookeeper-{{ version_zoo }}-bin"
+    dest: "{{ path_zoo }}"
+    state: link
+
+- name: Creating Service Override Directory
+  file:
+    path: "{{ zookeeper.systemd_override }}"
+    owner: "{{ zookeeper.user }}"
+    group: "{{ zookeeper.group }}"
+    state: directory
+    mode: 0640
+
+- name: Coping files configs
+  template:
+    src: "{{ item.orig }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ zookeeper.user }}"
+    group: "{{ zookeeper.group }}"
+    mode: '764'
+  with_items:
+    - orig: zoo.cfg.j2
+      dest: "{{ path_zoo }}/zoo.cfg"
+    - orig: override.conf.j2
+      dest: "{{ zookeeper.systemd_override }}/override.conf"
+  notify:
+    - reload systemd
+    - restart zookeeper
+
+- name: Creating Zookeeper myid File
+  template:
+    src: myid.j2
+    dest: "{{ zookeeper.properties.dataDir }}/myid"
+    mode: 0555
+    owner: "{{ zookeeper.user }}"
+    group: "{{ zookeeper.group }}"
+
+- name: Coping file service the zookeeper
+  template:
+    src: zookeeper.service.j2
+    dest: "{{ zookeeper.systemd_file }}"
+  notify:
+    - start zookeeper
+
+- meta: flush_handlers

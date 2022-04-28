@@ -1,0 +1,26 @@
+---
+
+- name: Create Zookeeper Group
+  group:
+    name: "{{ zookeeper.group }}"
+
+- name: Create Zookeeper User
+  user:
+    name: "{{ zookeeper.user }}"
+    comment: "Zookeeper User"
+    system: true
+    group: "{{ zookeeper.group }}"
+
+- name: Ensure datadir and logdir will create
+  file:
+    path: "{{ item }}"
+    owner: "{{ zookeeper.user }}"
+    group: "{{ zookeeper.group }}"
+    mode: 0755
+    state: directory
+  with_items:
+    - "{{ data_dir_zoo }}"
+    - "{{ log_dir_zoo }}"
+
+- name: Engure command unzip available
+  yum: name=unzip state=present

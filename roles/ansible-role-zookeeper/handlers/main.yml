@@ -1,0 +1,14 @@
+---
+
+- name: reload systemd
+  systemd:
+    daemon_reload: true
+- name: restart zookeeper
+  systemd:
+    name: "{{ zookeeper.service_name }}"
+    state: restarted
+- name: start zookeeper
+  systemd:
+    name: "{{ zookeeper.service_name }}"
+    enabled: "{{ zookeeper.systemd.enabled }}"
+    state: "{{ zookeeper.systemd.state }}"

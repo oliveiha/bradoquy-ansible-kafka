@@ -1,0 +1,19 @@
+#---
+dependencies:
+  - name: ansible-role-java
+    become: true
+
+galaxy_info:
+  author: alvarobacelar
+  description: Instalação e configuração do zookeeper standalone
+  company: "Alvaro"
+  license: "license (BSD, MIT)"
+  min_ansible_version: 2.4
+  platforms:
+    - name: EL
+      versions:
+        - 7
+  galaxy_tags:
+    - broker
+    - system
+    - zookeeper

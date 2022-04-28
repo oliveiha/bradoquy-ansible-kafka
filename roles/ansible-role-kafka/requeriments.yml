@@ -1,0 +1,6 @@
+---
+- src: ansible-role-java
+  name: java
+
+- src: ansible-role-zookeeper
+  name: zookeeper

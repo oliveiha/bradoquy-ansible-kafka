@@ -1,0 +1,134 @@
+---
+
+# variáveis default do kafka
+path_kafka: /etc/kafka
+log_dir_kafka: /var/log/kafka/
+version_kafka: 3.1.0
+version_kafka_release: 2.13
+port_kafka: 9092
+advertised_listeners: "{{ ansible_default_ipv4.address }}"
+nofile_open: 100000
+
+## SSL Variables
+ssl_enabled: false
+ssl_mutual_auth_enabled: false
+## SASL Variables: plain, kerberos, scram
+sasl_protocol: none
+
+# jmx exporter variables
+jmxexporter_port: 7072
+jmxexporter_jar_path: /etc/kafka/libs
+jmxexporter_jar_version: 0.12.0
+jmxexporter_jar_url: https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/{{ jmxexporter_jar_version }}/jmx_prometheus_javaagent-{{ jmxexporter_jar_version }}.jar
+jmxexporter_yml_url: https://raw.githubusercontent.com/prometheus/jmx_exporter/master/example_configs/kafka-2_0_0.yml
+jmxexporter_jar: jmx_prometheus_javaagent-{{ jmxexporter_jar_version }}.jar
+jmxexporter_jar_yml: kafka-2-0-0.yml
+# disable or enable jmx exporter (default is enable)
+jmxexporter_enabled: true
+
+# link download kafka
+_kafka_link: https://downloads.apache.org/kafka/{{ version_kafka }}/kafka_{{ version_kafka_release }}-{{ version_kafka }}.tgz
+#_kafka_link: http://ftp.unicamp.br/pub/apache/kafka/{{ version_kafka }}/kafka_{{ version_kafka_release }}-{{ version_kafka }}.tgz
+
+zookeeper:
+  properties:
+    clientPort: 2181
+
+kafka_broker_default_listeners:
+  external:
+    name: "{{ 'EXTERNAL' if kafka_broker_configure_additional_brokers|bool else 'DEFAULT' }}"
+    port: "{{ port_kafka }}"
+    ssl_enabled: "{{ ssl_enabled }}"
+    advertised: "{{ advertised_listeners }}"
+    ssl_mutual_auth_enabled: "{{ ssl_mutual_auth_enabled }}"
+    sasl_protocol: "{{ sasl_protocol }}"
+
+kafka_broker_custom_listeners:
+  internal:
+    name: INTERNAL
+    port: 9091
+    advertised: "{{ hostvars['inventory_hostname'] }}"
+    ssl_enabled: "{{ ssl_enabled }}"
+    ssl_mutual_auth_enabled: "{{ ssl_mutual_auth_enabled }}"
+    sasl_protocol: "{{ sasl_protocol }}"
+
+kafka_broker_configure_additional_brokers: true
+kafka_broker_listeners: "{{ kafka_broker_default_listeners | combine(kafka_broker_custom_listeners, recursive=True) if kafka_broker_configure_additional_brokers|bool else  kafka_broker_default_listeners }}"
+kafka_broker_inter_broker_listener_name: "{{ 'internal' if kafka_broker_configure_additional_brokers|bool else 'external' }}"
+
+
+# Uses custom filter to create a list of all sasl_protocols, removes ['none'], and reduces to unique items
+kafka_broker_sasl_enabled_mechanisms: "{{ kafka_broker_listeners | get_sasl_mechanisms | difference(['none']) | unique }}"
+
+open_file_limit: 50000
+
+kafka_broker_open_file_limit: "{{ open_file_limit }}"
+
+kafka_broker_jmxexporter_java_arg_buildout: "-javaagent:{{ jmxexporter_jar_path }}/{{ jmxexporter_jar }}={{ jmxexporter_port }}:{{ jmxexporter_jar_path }}/{{ jmxexporter_jar_yml }}"
+kafka_broker_jmxexporter_java_arg: "{{ kafka_broker_jmxexporter_java_arg_buildout if jmxexporter_enabled|bool else '' }}"
+
+kafka_broker_log4j_file: /etc/kafka/kafka_server_log4j.properties
+
+kafka_broker_service_overrides:
+  LimitNOFILE: "{{kafka_broker_open_file_limit}}"
+kafka_broker_service_environment_overrides:
+  KAFKA_HEAP_OPTS: "-Xmx2g"
+  LOG_DIR: "{{ log_dir_kafka }}"
+  EXTRA_ARGS: "{{ kafka_broker_jmxexporter_java_arg }}"
+  KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:{{kafka_broker_log4j_file}}"
+
+kafka_broker_sysctl:
+  vm.swappiness: 1
+  vm.dirty_background_ratio: 5
+  vm.dirty_ratio: 60
+
+kafka_broker:
+  user: kafka
+  group: kafka
+  config_file: /etc/kafka/server.properties
+  log4j_file: "{{ kafka_broker_log4j_file }}"
+  appender_log_path: "{{ log_dir_kafka }}"
+  kafka_appender_log_name: server.log
+  kafka_appender_max_log_files: 10
+  kafka_appender_log_file_size: 100MB
+  state_change_appender_log_name: state-change.log
+  state_change_appender_max_log_files: 10
+  state_change_appender_log_file_size: 100MB
+  request_appender_log_name: kafka-request.log
+  request_appender_max_log_files: 10
+  request_appender_log_file_size: 100MB
+  cleaner_appender_log_name: log-cleaner.log
+  cleaner_appender_max_log_files: 10
+  cleaner_appender_log_file_size: 100MB
+  controller_appender_log_name: controller.log
+  controller_appender_max_log_files: 10
+  controller_appender_log_file_size: 100MB
+  authorizer_appender_log_name: kafka-authorizer.log
+  authorizer_appender_max_log_files: 10
+  authorizer_appender_log_file_size: 100MB
+  systemd_file: /usr/lib/systemd/system/kafka.service
+  systemd_override: /etc/systemd/system/kafka.service.d
+  service_name: kafka
+  datadir:
+    - /var/lib/kafka/data
+  systemd:
+    enabled: true
+    state: started
+  properties:
+    group.initial.rebalance.delay.ms: 3
+    log.retention.check.interval.ms: 300000
+    log.retention.hours: 168
+    log.segment.bytes: 1073741824
+    num.io.threads: 16
+    num.network.threads: 4
+    num.partitions: 1
+    num.recovery.threads.per.data.dir: 2
+    offsets.topic.replication.factor: 3
+    socket.receive.buffer.bytes: 102400
+    socket.request.max.bytes: 104857600
+    socket.send.buffer.bytes: 102400
+    transaction.state.log.min.isr: 2
+    transaction.state.log.replication.factor: 3
+    zookeeper.connection.timeout.ms: 4000
+    auto.create.topics.enable: false
+    # metric.reporters: com.linkedin.kafka.cruisecontrol.metricsreporter.CruiseControlMetricsReporter

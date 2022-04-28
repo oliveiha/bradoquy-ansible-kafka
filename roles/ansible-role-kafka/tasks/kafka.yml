@@ -1,0 +1,86 @@
+---
+
+- name: Downloading package tzg kafka to server
+  unarchive:
+    src: "{{ _kafka_link }}"
+    dest: "/opt/"
+    owner: "{{ kafka_broker.user }}"
+    creates: "/opt/kafka_{{ version_kafka_release }}-{{ version_kafka }}"
+    remote_src: true
+
+- name: Creating link simbolic dir kafka to {{ path_kafka }}
+  file:
+    src: "/opt/kafka_{{ version_kafka_release }}-{{ version_kafka }}"
+    dest: "{{ path_kafka }}"
+    state: link
+
+- name: Coping the files configuration kafka
+  template:
+    src: "{{ item.orig }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ kafka_broker.user }}"
+    backup: true
+  with_items:
+    - orig: server.properties.j2
+      dest: "{{ kafka_broker.config_file }}"
+
+- name: Downloading prometheus files
+  get_url:
+    url: "{{ jmxexporter_jar_url }}"
+    dest: "{{ jmxexporter_jar_path }}/{{ jmxexporter_jar }}"
+    owner: "{{ kafka_broker.user }}"
+    group: "{{ kafka_broker.group }}"
+    mode: 0644
+
+- name: Downloading file yml exporter metrics prometheus
+  get_url:
+    url: "{{ jmxexporter_yml_url }}"
+    dest: "{{ jmxexporter_jar_path }}/{{ jmxexporter_jar_yml }}"
+    owner: "{{ kafka_broker.user }}"
+    group: "{{ kafka_broker.group }}"
+    mode: 0644
+
+- name: Create kafka broker log4j config
+  template:
+    src: kafka_server_log4j.properties.j2
+    dest: "{{ kafka_broker.log4j_file }}"
+    mode: 0640
+    owner: "{{ kafka_broker.user }}"
+    group: "{{ kafka_broker.group }}"
+  notify:
+    - restart kafka
+
+- name: Create service override directory
+  file:
+    path: "{{ kafka_broker.systemd_override }}"
+    owner: "{{ kafka_broker.user }}"
+    group: "{{ kafka_broker.group }}"
+    state: directory
+    mode: 0640
+
+- name: Write service overrides
+  template:
+    src: override.conf.j2
+    dest: "{{ kafka_broker.systemd_override }}/override.conf"
+    mode: 0640
+    owner: "{{ kafka_broker.user }}"
+    group: "{{ kafka_broker.group }}"
+  notify:
+    - reload systemd
+    - restart kafka
+
+- name: Tune virtual memory settings
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+  with_dict: "{{ kafka_broker_sysctl }}"
+
+- name: Coping file service on the kafka
+  template:
+    src: kafka.service.j2
+    dest: "{{ kafka_broker.systemd_file }}"
+  notify:
+    - start kafka
+
+- meta: flush_handlers

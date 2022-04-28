@@ -1,0 +1,9 @@
+---
+
+- include: conf.yml
+  tags:
+    - conf
+
+- include: zookeeper.yml
+  tags:
+    - zookeeper

@@ -1,0 +1,36 @@
+# Maintained by Ansible
+zookeeper.connect={% for host in groups['zookeeper'] %}{% if loop.index > 1%},{% endif %}{{ host }}:{{ zookeeper.properties.clientPort }}{% endfor %}
+
+log.dirs={% for logdir in kafka_broker.datadir %}{% if loop.index > 1%},{% endif %}{{ logdir }}{% endfor %}
+
+broker.id={{ broker_id | default(groups.kafka_broker.index(inventory_hostname) + 1)}}
+
+{% for key, value in kafka_broker.properties.items() %}
+{{key}}={{value}}
+{% endfor %}
+
+listeners={% for listener in kafka_broker_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}://{{ listener['value']['hostname'] | default('') }}:{{ listener['value']['port'] }}{% endfor %}
+
+listener.security.protocol.map={% for listener in kafka_broker_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}:{{ listener['value']['sasl_protocol'] | kafka_protocol(listener['value']['ssl_enabled'])}}{% endfor %}
+
+advertised.listeners={% for listener in kafka_broker_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}://{{ listener['value']['advertised'] | default('') }}:{{ listener['value']['port'] }}{% endfor %}
+
+## Inter Broker Listener Configuration
+inter.broker.listener.name={{ kafka_broker_listeners[kafka_broker_inter_broker_listener_name]['name'] }}
+{% if kafka_broker_listeners[kafka_broker_inter_broker_listener_name]['sasl_protocol'] | normalize_sasl_protocol != 'none' %}
+sasl.mechanism.inter.broker.protocol={{kafka_broker_listeners[kafka_broker_inter_broker_listener_name]['sasl_protocol'] | normalize_sasl_protocol}}
+{% endif %}
+{% if kafka_broker_sasl_enabled_mechanisms|length > 0 %}
+sasl.enabled.mechanisms={% for mechanism in kafka_broker_sasl_enabled_mechanisms %}{% if loop.index > 1%},{% endif %}{{ mechanism|upper }}{% endfor %}
+{% endif %}
+{% if 'GSSAPI' in kafka_broker_sasl_enabled_mechanisms %}
+sasl.kerberos.service.name={{kerberos_kafka_broker_primary}}
+{% endif %}
+
+{% for listener in kafka_broker_listeners|dict2items %}
+{% set listener_name = listener['value']['name'] %}
+{% set listener_ssl_enabled = listener['value']['ssl_enabled'] %}
+{% set listener_ssl_mutual_auth_enabled = listener['value']['ssl_mutual_auth_enabled'] %}
+{% set listener_sasl_protocol = listener['value']['sasl_protocol'] | normalize_sasl_protocol %}
+{% include 'listener.j2' %}
+{% endfor %}
