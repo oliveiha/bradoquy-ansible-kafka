@@ -1,0 +1,51 @@
+---
+- name: Get Kafka Cluster Id
+  import_role:
+    name: common
+    tasks_from: rbac_setup.yml
+  when: rbac_enabled
+  vars:
+    copy_certs: false
+
+- name: Fetch KSQL Cluster Groups
+  set_fact: active_ksql_groups="{{ (((active_ksql_groups | default([])) + hostvars[item].group_names) | difference('ksql'+'ksql_parallel'+'ksql_serial')) | default(['ksql'], true) }}"
+  with_items: "{{ ansible_play_hosts }}"
+
+- name: Register KSQL Cluster
+  vars:
+    cluster_host_delegates: "{{ active_ksql_groups | map('extract', groups, 0)| list }}"
+    cluster_group: "{{ hostvars[item].parent_ksql_cluster_group }}"
+    cluster_name: "{{ hostvars[item].ksql_cluster_name }}"
+    cluster_id: "{{ hostvars[item].parent_ksql_cluster_id }}"
+  uri:
+    url: "{{mds_bootstrap_server_urls.split(',')[0]}}/security/1.0/registry/clusters"
+    method: POST
+    validate_certs: false
+    force_basic_auth: true
+    url_username: "{{mds_super_user}}"
+    url_password: "{{mds_super_user_password}}"
+    headers:
+      Content-Type: application/json
+    body_format: json
+    body: >
+      [
+          {
+              "clusterName": "{{ cluster_name }}",
+              "scope": {
+                  "clusters": {
+                      "kafka-cluster": "{{kafka_cluster_id}}",
+                      "ksql-cluster": "{{ cluster_id }}"
+                  }
+              },
+              "hosts": [ {% for host in groups[cluster_group] %}{% if loop.index > 1%},{% endif %}{ "host": "{{host}}", "port": {{ksql_listener_port}} }{% endfor %}
+              ],
+              "protocol": "{{ksql_http_protocol | upper}}"
+          }
+      ]
+    status_code: 204
+  register: output
+  when:
+    - hostvars[item].get("rbac_enabled", false)|bool
+    - hostvars[item].ksql_cluster_name is defined
+    - hostvars[item].parent_ksql_cluster_id is defined
+  with_items: "{{ cluster_host_delegates }}"

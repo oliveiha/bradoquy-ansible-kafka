@@ -1,0 +1,197 @@
+---
+- name: Remove kafka group
+  group:
+    name: '{{ kafka_group }}'
+    state: absent
+    system: yes
+  when: kafka_create_user_group | bool
+
+- name: Remove kafka user
+  user:
+    name: '{{ kafka_user }}'
+    group: '{{ kafka_group }}'
+    state: absent
+    createhome: no
+    system: yes
+  when: kafka_create_user_group | bool
+
+- name: Remove symlink to kafka installation directory
+  file:
+    src: '{{ kafka_root_dir }}/kafka_{{ kafka_scala_version }}-{{ kafka_version }}'
+    dest: '{{ kafka_dir }}'
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+
+- name: Remove directory for kafka data log files
+  file:
+    path: '{{ kafka_data_log_dirs }}'
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+    mode: 0755
+
+- name: Remove directory for kafka application logs
+  file:
+    path: '{{ kafka_log_dir }}'
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+    mode: 0755
+
+- name: Remove symlink to application log directory
+  file:
+    src: '{{ kafka_log_dir }}'
+    dest: '{{ kafka_dir }}/logs'
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+    mode: 0755
+    follow: no
+
+- name: Create directory for symlink to kafka configuration files
+  file:
+    path: /etc/kafka
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+    mode: 0755
+
+- name: Create symlink to kafka server properties file
+  file:
+    src: '{{ kafka_dir }}/config/server.properties'
+    dest: /etc/kafka/server.properties
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+
+- name: Create symlink to kafka connect standalone properties file
+  file:
+    src: '{{ kafka_dir }}/config/connect-standalone.properties'
+    dest: /etc/kafka/connect-standalone.properties
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+
+- name: Create symlink to kafka connect distributed properties file
+  file:
+    src: '{{ kafka_dir }}/config/connect-distributed.properties'
+    dest: /etc/kafka/connect-distributed.properties
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+
+- name: Create symlink to kafka producer properties file
+  file:
+    src: '{{ kafka_dir }}/config/producer.properties'
+    dest: /etc/kafka/producer.properties
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+
+- name: Create symlink to kafka consumer properties file
+  file:
+    src: '{{ kafka_dir }}/config/consumer.properties'
+    dest: /etc/kafka/consumer.properties
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+
+- name: Create symlink to kafka log4j properties file
+  file:
+    src: '{{ kafka_dir }}/config/log4j.properties'
+    dest: /etc/kafka/log4j.properties
+    state: absent
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+  
+- name: Template Kafka init.d service file
+  file:
+    path: /etc/init.d/kafka/kafka.initd
+    state: absent
+
+- name: Install and start the kafka service
+  service:
+    name: kafka
+    state: absent
+
+- name: Create zookeeper group
+  ansible.builtin.group:
+    name: "{{ zookeeper_group }}"
+    state: absent
+    system: yes
+
+- name: Create zookeeper user
+  ansible.builtin.user:
+    name: "{{ zookeeper_user }}"
+    group: "{{ zookeeper_group }}"
+    state: absent
+
+- name: Create ZooKeeper installation dir {{ zookeeper_install_dir }}
+  ansible.builtin.file:
+    path: "{{ zookeeper_install_dir }}"
+    state: absent
+
+- name: Create symlink to ZooKeeper installation
+  ansible.builtin.file:
+    src: "{{ zookeeper_install_dir }}"
+    dest: "{{ zookeeper_dir }}"
+    state: absent
+
+- name: Create directory for snapshot files and myid file
+  ansible.builtin.file:
+    path: "{{ zookeeper_data_dir }}"
+    state: absent
+
+- name: Create directory for transaction log files
+  ansible.builtin.file:
+    path: "{{ zookeeper_data_log_dir }}"
+    state: absent
+
+- name: Create zookeeper log directory
+  ansible.builtin.file:
+    path: "{{ zookeeper_log_dir }}"
+    state: absent
+
+- name: Template configuration file to zoo.cfg
+  file:
+    path: "{{ zookeeper_dir }}/conf/zoo.cfg"
+    state: absent
+
+- name: Create directory for symlink to ZooKeeper configuration file
+  ansible.builtin.file:
+    path: /etc/zookeeper
+    state: absent
+
+- name: Create symlink to ZooKeeper configuration file
+  ansible.builtin.file:
+    src: "{{ zookeeper_dir }}/conf/zoo.cfg"
+    dest: /etc/zookeeper/zoo.cfg
+    state: absent
+
+- name: Template myid to {{ zookeeper_data_dir }}/myid
+  file:
+    path:  "{{ zookeeper_data_dir }}/myid/myid"
+    state: absent
+
+- name: Template /etc/default
+  file:
+    path: "/etc/default/zookeeper/default"
+    state: absent
+
+- name: Set maximum log rollover history
+  file:
+    path: "{{ zookeeper_dir }}/conf/log4j.properties"
+    state: absent
+
+- name: Template ZooKeeper systemd service file
+  file:
+    path: "{{ zookeeper_unit_path }}/zookeeper.service"
+    state: absent
+
+- name: Start the ZooKeeper service
+  ansible.builtin.systemd:
+    name: zookeeper.service
+    state: absent
+    enabled: no
+

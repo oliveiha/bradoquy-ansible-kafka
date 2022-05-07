@@ -1,0 +1,10 @@
+---
+- name: install zookeeper
+  hosts: zookeeper
+  gather_facts: true
+  user: root
+  become: true
+  roles:
+    - role: ansible-role-remove-all
+
+
