@@ -127,6 +127,94 @@ control_center:
     ec26:
 ```
 
+#### Config distribution
+```
+################################################################################
+# Egress access for all 6 machines
+################################################################################
+Allow
+port: any
+protocol: any
+to ip/ipBlock: 0.0.0.0/0
+################################################################################
+# SSH access for all 6 machines
+################################################################################
+Allow
+port: 22
+protocol: TCP
+from ip/ipBlock: your workstation
+################################################################################
+# 1
+################################################################################
+# For Zookeeper
+Allow
+port: 2181
+protocol: TCP
+from ip/ipBlock: 2, 3, 4
+################################################################################
+# 2, 3, 4
+################################################################################
+# For inter broker communication
+Allow
+port: 9091
+protocol: TCP
+from ip/ipBlock: 2, 3, 4
+# For Kafka AdminClient API, custom applications, etc
+Allow
+port: 9092
+protocol: TCP
+from ip/ipBlock: 0.0.0.0/0
+// Alternatively for more restrictive use, only allow ingress from 5, 6, and your workstation
+# OPTIONAL: For MDS & Embedded Kafka Rest
+Allow
+port: 8090
+protocol: TCP
+to ip/ipBlock: 0.0.0.0/0
+// Alternatively for more restrictive use, only allow ingress from 6 and your workstation
+# OPTIONAL: For Standalone REST Proxy
+Allow
+port: 8082
+protocol: TCP
+to ip/ipBlock: 0.0.0.0/0
+// Alternatively for more restrictive use, only allow ingress from 6 and your workstation
+################################################################################
+# 5
+################################################################################
+# For Kafka Connect
+Allow
+port: 8083
+protocol: TCP
+from ip/ipBlock: 0.0.0.0/0
+// Alternatively for more restrictive use, only allow ingress from 6 and your workstation
+# For KSQL
+Allow
+port: 8088
+protocol: TCP
+from ip/ipBlock: 0.0.0.0/0
+// Alternatively for more restrictive use, only allow ingress from 6 and your workstation
+# For Schema Registry
+Allow
+port: 8081
+protocol: TCP
+from ip/ipBlock: 0.0.0.0/0
+// Alternatively for more restrictive use, only allow ingress from 6 and your workstation
+################################################################################
+# 6
+################################################################################
+# For browser access to Confluent Control Center
+Allow
+port: 9021
+protocol: TCP
+from ip/ipBlock: 0.0.0.0/0
+// Alternatively for more restrictive use, only allow ingress from your workstation
+# For Metadata Service and Embedded Kafka REST
+Allow
+port: 8090
+protocol: TCP
+to ip/ipBlock: 0.0.0.0/0
+// Alternatively for more restrictive use, only allow ingress from 6 and your workstation
+```
+
 4. Run the following command: 
 ```bash
 ansible-playbook -i hosts.yml confluent.platform.all
