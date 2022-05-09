@@ -1,0 +1,13 @@
+.DS_Store
+*.retry
+*.pyc
+*.iml
+*.idea
+*.iml
+*.jar
+generated_ssl_files/
+error_files/
+troubleshooting/
+*base-config.yml
+molecule/*/*.tar.gz
+.pre-commit-config.yaml

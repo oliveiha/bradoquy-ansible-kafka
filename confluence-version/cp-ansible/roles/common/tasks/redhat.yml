@@ -1,0 +1,44 @@
+---
+- name: Add Confluent Repo file
+  template:
+    src: confluent.repo.j2
+    dest: /etc/yum.repos.d/confluent.repo
+    mode: 0644
+  register: confluent_repo_result
+  when:
+    - repository_configuration == 'confluent'
+    - installation_method == "package"
+
+- name: Add Custom Repo file
+  copy:
+    src: "{{custom_yum_repofile_filepath}}"
+    dest: /etc/yum.repos.d/custom-confluent.repo
+    mode: 0644
+  when: repository_configuration == 'custom'
+
+# Not using handler because of https://github.com/ansible/ansible/issues/41313
+- name: yum-clean-all
+  command: yum clean all
+  args:
+    warn: false
+  when: >
+    confluent_repo_result.changed|default(False) or
+    repository_configuration == 'custom'
+
+- name: Install Java
+  yum:
+    name: "{{redhat_java_package_name}}"
+    state: present
+  register: java_install_result
+  until: java_install_result is success
+  retries: 10
+  delay: 5
+  when: install_java|bool
+  tags: package
+
+- name: Install OpenSSL and Unzip
+  yum:
+    name:
+      - openssl
+      - unzip
+  tags: package

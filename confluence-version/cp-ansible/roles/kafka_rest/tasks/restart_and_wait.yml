@@ -1,0 +1,12 @@
+---
+- name: Restart Kafka Rest
+  systemd:
+    daemon_reload: true
+    name: "{{kafka_rest_service_name}}"
+    state: restarted
+  tags:
+    - systemd
+
+- name: Startup Delay
+  wait_for:
+    timeout: "{{ kafka_rest_health_check_delay }}"

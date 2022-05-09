@@ -1,0 +1,30 @@
+---
+driver:
+  name: docker
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: ../../test_roles/
+    ANSIBLE_COLLECTIONS_PATH: ../../
+  config_options:
+    defaults:
+      hash_behaviour: merge
+  playbooks:
+    converge: ../collections_converge.yml
+verifier:
+  name: ansible
+scenario:
+  test_sequence:
+    - lint
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    # - idempotence
+    - side_effect
+    - verify
+    - cleanup
+    - destroy

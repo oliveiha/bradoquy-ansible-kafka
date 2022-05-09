@@ -1,0 +1,26 @@
+---
+#### Confluent CLI Variables ####
+
+### Confluent CLI supported architectures
+confluent_cli_goarch:
+  x86: "386"
+  i386: "386"
+  i686: "386"
+  x86_64: "amd64"
+
+### Filename of Confluent CLI binary inside the archive
+confluent_cli_binary: confluent
+
+confluent_yum_repositories:
+  "Confluent":
+    description: "Confluent repository"
+    baseurl: "{{confluent_common_repository_redhat_main_baseurl}}"
+    gpgcheck: "{{confluent_common_repository_redhat_main_gpgcheck}}"
+    gpgkey: "{{confluent_common_repository_redhat_main_gpgkey}}"
+    enabled: "{{confluent_common_repository_redhat_main_enabled}}"
+  "Confluent.clients":
+    description: "Confluent repository (clients)"
+    baseurl: "{{confluent_common_repository_redhat_clients_baseurl}}"
+    gpgcheck: "{{confluent_common_repository_redhat_clients_gpgcheck}}"
+    gpgkey: "{{confluent_common_repository_redhat_clients_gpgkey}}"
+    enabled: "{{confluent_common_repository_redhat_clients_enabled}}"
