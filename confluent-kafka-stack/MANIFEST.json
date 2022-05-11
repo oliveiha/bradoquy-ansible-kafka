@@ -1,0 +1,31 @@
+{
+ "collection_info": {
+  "namespace": "confluent",
+  "name": "platform",
+  "version": "7.1.1",
+  "authors": [
+   "Confluent Ansible Community (https://github.com/confluentinc/cp-ansible)"
+  ],
+  "readme": "README.md",
+  "tags": [
+   "confluent",
+   "kafka"
+  ],
+  "description": "Confluent Platform Ansible Collection",
+  "license": [],
+  "license_file": "LICENSE.md",
+  "dependencies": {},
+  "repository": "https://github.com/confluentinc/cp-ansible",
+  "documentation": "https://docs.confluent.io/ansible/current/overview.html",
+  "homepage": "https://github.com/confluentinc/cp-ansible",
+  "issues": "https://github.com/confluentinc/cp-ansible/issues"
+ },
+ "file_manifest_file": {
+  "name": "FILES.json",
+  "ftype": "file",
+  "chksum_type": "sha256",
+  "chksum_sha256": "e42001e047b57e9a517f0d9c17a2091a37ba8759c247c7fbc127e04a8562a217",
+  "format": 1
+ },
+ "format": 1
+}

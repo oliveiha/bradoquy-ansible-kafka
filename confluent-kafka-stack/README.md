@@ -233,5 +233,30 @@ ec25    : ok=81	changed=57	unreachable=0	failed=0	skipped=88	rescued=0	ignored=0
 ec26    : ok=81	changed=57	unreachable=0	failed=0	skipped=88	rescued=0	ignored=0
 ```
 
+# CP-Ansible
+
+## Introduction
+
+Ansible provides a simple way to deploy, manage, and configure the Confluent Platform services. This repository provides playbooks and templates to easily spin up a Confluent Platform installation. Specifically this repository:
+
+* Installs Confluent Platform packages or archive.
+* Starts services using systemd scripts.
+* Provides configuration options for many security options including encryption, authentication, and authorization.
+
+The services that can be installed from this repository are:
+
+* ZooKeeper
+* Kafka
+* Schema Registry
+* REST Proxy
+* Confluent Control Center
+* Kafka Connect (distributed mode)
+* KSQL Server
+* Replicator
+
+
+
+
+
 
 
