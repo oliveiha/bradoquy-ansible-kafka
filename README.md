@@ -64,18 +64,6 @@ echo "Disable Selinux"
 setenforce 0
 ```
 
-## Usage
-
-```sh
-npm run start
-```
-
-## Run tests
-
-```sh
-npm run test
-```
-
 ## Author
 
 👤 **Tiago Oliveira**
