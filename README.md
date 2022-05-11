@@ -22,14 +22,46 @@
 
 ### ✨ [Demo](https://github.com/oliveiha/bradoquy-ansible-kafka)
 
-## Prerequisites
+## Prerequisites for Nodes
 
-- node >=9.3.0
+* install git
+* install python3
+* nstall setuptools_rust python module
+* install --upgrade pip 
+* install ansible via pip3
+* disable selinux
+* stop and disable firewalld
 
 ## Install
 
 ```sh
-yum install git, yum install python3, pip3 install setuptools_rust, pip3 install --upgrade pip, pip3 install ansible, vim /etc/sysconfig/selinux, systemctl stop firewalld, systemctl disable firewalld
+#!/bin/bash
+echo "Install git"
+yum install git
+
+echo "Install python"
+yum install python3
+
+echo "Install module rust"
+pip3 install setuptools_rust
+
+echo "Upgrade pip"
+pip3 install --upgrade pip
+
+echo "Install git"
+pip3 install ansible
+
+echo "Stop FirewallD"
+systemctl stop firewalld
+
+echo "Disable FirewallD"
+systemctl disable firewalld
+
+echo "Disable Selinux"
+sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+
+echo "Disable Selinux"
+setenforce 0
 ```
 
 ## Usage
